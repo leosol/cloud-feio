@@ -139,20 +139,25 @@ def check_site(scheme, vhost, ipaddr, hintStrings, LOG_FILE):
 			respfile.close()
 			SUCCESS_COUNT = SUCCESS_COUNT+1
 			SUCCESS_ITEMS.append('resp_'+scheme+'-'+ipaddr+'.dat')
-			
-		LOG_FILE.write("_________________________\n")
-		LOG_FILE.write("IP:\t"+ipaddr+'\n')
-		LOG_FILE.write("Scheme:\t"+scheme+'\n')
-		LOG_FILE.write("Code:\t"+ str(status_code)+'\n')
-		LOG_FILE.write("Score:\t"+str(score)+foundStr+'\n')
+		log_str = ""
+		log_str = log_str +"_________________________\n"
+		log_str = log_str +"IP:\t"+ipaddr+'\n'
+		log_str = log_str +"Scheme:\t"+scheme+'\n'
+		log_str = log_str +"Code:\t"+ str(status_code)+'\n'
+		log_str = log_str +"Score:\t"+str(score)+foundStr+'\n'
+		LOG_FILE.write(log_str)
+		LOG_FILE.flush()
 		
 	except:
-		LOG_FILE.write("_________________________\n")
-		LOG_FILE.write("IP:\t"+ipaddr+" (failed)\n")
-		LOG_FILE.write("Scheme:\t"+scheme+'\n')
-		LOG_FILE.write("Code:\t-1\n")
-		LOG_FILE.write("Score:\t-1\n")	
-	LOG_FILE.flush()
+		log_str = ""
+		log_str = log_str +"_________________________\n"
+		log_str = log_str +"_________________________\n"
+		log_str = log_str +"IP:\t"+ipaddr+" (failed)\n"
+		log_str = log_str +"Scheme:\t"+scheme+'\n'
+		log_str = log_str +"Code:\t-1\n"
+		log_str = log_str +"Score:\t-1\n"
+		LOG_FILE.write(log_str)
+		LOG_FILE.flush()
 
 def spawnNetworks(networkList):
 	result = []
