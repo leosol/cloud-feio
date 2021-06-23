@@ -103,16 +103,17 @@ def collect_cert(ipaddr, port, LOG_FILE):
 		x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert)
 		der = OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_ASN1, x509)
 		with open('./'+WORKDIR+'/certs/cert-'+str(ipaddr)+' port '+str(port), 'wb') as f: f.write(der)
-		LOG_FILE.write("IP "+str(ipaddr)+" port "+str(port)+" CN=" + x509.get_subject().CN+'\n')
+		LOG_FILE.write("CERT: IP "+str(ipaddr)+" port "+str(port)+" CN=" + x509.get_subject().CN+'\n')
+		LOG_FILE.flush()
 	except:
-		LOG_FILE.write("IP "+str(ipaddr)+" port "+str(port)+" CN= FAILED \n")
+		LOG_FILE.write("CERT: IP "+str(ipaddr)+" port "+str(port)+" CN= FAILED \n")
+		LOG_FILE.flush()
 
 def check_site(scheme, vhost, ipaddr, hintStrings, LOG_FILE): 
 	global SUCCESS_COUNT
 	global SUCCESS_ITEMS
 	sys.stdout.write('.')
 	sys.stdout.flush()
-	LOG_FILE.write("_________________________\n")
 	try:
 		response = {}
 		body = ''
@@ -139,13 +140,14 @@ def check_site(scheme, vhost, ipaddr, hintStrings, LOG_FILE):
 			SUCCESS_COUNT = SUCCESS_COUNT+1
 			SUCCESS_ITEMS.append('resp_'+scheme+'-'+ipaddr+'.dat')
 			
-
+		LOG_FILE.write("_________________________\n")
 		LOG_FILE.write("IP:\t"+ipaddr+'\n')
 		LOG_FILE.write("Scheme:\t"+scheme+'\n')
 		LOG_FILE.write("Code:\t"+ str(status_code)+'\n')
 		LOG_FILE.write("Score:\t"+str(score)+foundStr+'\n')
 		
 	except:
+		LOG_FILE.write("_________________________\n")
 		LOG_FILE.write("IP:\t"+ipaddr+" (failed)\n")
 		LOG_FILE.write("Scheme:\t"+scheme+'\n')
 		LOG_FILE.write("Code:\t-1\n")
