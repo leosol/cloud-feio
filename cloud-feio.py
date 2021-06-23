@@ -151,7 +151,6 @@ def check_site(scheme, vhost, ipaddr, hintStrings, LOG_FILE):
 	except:
 		log_str = ""
 		log_str = log_str +"_________________________\n"
-		log_str = log_str +"_________________________\n"
 		log_str = log_str +"IP:\t"+ipaddr+" (failed)\n"
 		log_str = log_str +"Scheme:\t"+scheme+'\n'
 		log_str = log_str +"Code:\t-1\n"
