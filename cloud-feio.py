@@ -9,7 +9,10 @@ import signal
 import sys
 import argparse
 import os.path
-
+import socket
+import ssl
+import OpenSSL
+import OpenSSL.crypto as crypto
 
 REQUESTED_SIGINT = 0
 SUCCESS_COUNT = 0
@@ -18,6 +21,7 @@ FOLLOW_LOCATION = 1
 TIMEOUT = 30
 URL_RESOURCE = '/'
 WORKERS = 250
+COLLECT_CERTS = 0
 
 WORKDIR =  datetime.now().strftime("SCAN %Y-%m-%d at %H-%M-%S")
 
@@ -86,11 +90,29 @@ def request_page_https_nosni(vhost, ipaddr):
 	curl.close()
 	return {'status_code': status_code, 'body': buffer.getvalue()}	
 
+def collect_cert(ipaddr, port, LOG_FILE):
+	if port < 0:
+		LOG_FILE.write("IP "+str(ipaddr)+" port "+str(port)+" CN= Not Configured \n")
+	try:
+		#context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+		#s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		#ssl_sock = context.wrap_socket(s, server_hostname=hostname)
+		#ssl_sock.connect((ipaddr, port))
+		#ssl_sock.close()
+		cert = ssl.get_server_certificate((str(ipaddr), 443))
+		x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert)
+		der = OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_ASN1, x509)
+		with open('./'+WORKDIR+'/certs/cert-'+str(ipaddr)+' port '+str(port), 'wb') as f: f.write(der)
+		LOG_FILE.write("IP "+str(ipaddr)+" port "+str(port)+" CN=" + x509.get_subject().CN+'\n')
+	except:
+		LOG_FILE.write("IP "+str(ipaddr)+" port "+str(port)+" CN= FAILED \n")
+
 def check_site(scheme, vhost, ipaddr, hintStrings, LOG_FILE): 
 	global SUCCESS_COUNT
 	global SUCCESS_ITEMS
 	sys.stdout.write('.')
 	sys.stdout.flush()
+	LOG_FILE.write("_________________________\n")
 	try:
 		response = {}
 		body = ''
@@ -122,13 +144,12 @@ def check_site(scheme, vhost, ipaddr, hintStrings, LOG_FILE):
 		LOG_FILE.write("Scheme:\t"+scheme+'\n')
 		LOG_FILE.write("Code:\t"+ str(status_code)+'\n')
 		LOG_FILE.write("Score:\t"+str(score)+foundStr+'\n')
-		LOG_FILE.write("_________________________\n")
+		
 	except:
 		LOG_FILE.write("IP:\t"+ipaddr+" (failed)\n")
 		LOG_FILE.write("Scheme:\t"+scheme+'\n')
 		LOG_FILE.write("Code:\t-1\n")
 		LOG_FILE.write("Score:\t-1\n")	
-		LOG_FILE.write("_________________________\n")
 	LOG_FILE.flush()
 
 def spawnNetworks(networkList):
@@ -161,6 +182,8 @@ def doFindVhostWithThreadPool(ipaddr, hostname, hintStrings, LOG_FILE):
 	check_site('http', hostname, str(ipaddr), hintStrings, LOG_FILE)
 	check_site('https', hostname, str(ipaddr), hintStrings, LOG_FILE)
 	check_site('https (SNI)', hostname, str(ipaddr), hintStrings, LOG_FILE)
+	if COLLECT_CERTS > 0:
+		collect_cert(ipaddr, 443, LOG_FILE)
 
 processedItems = 0
 def future_callback_error_logger(future):
@@ -222,6 +245,7 @@ parser.add_argument('follow-redir', type=int, nargs='?', help='{0,1} Follow redi
 parser.add_argument('timeout', type=int, nargs='?', help='Timeout (defaults to 30s)')
 parser.add_argument('url-resource',type=str, nargs='?', help='Extra part of the URL - defaults to / (slash)')
 parser.add_argument('workers', type=int, nargs='?', help='Max open requests at a single time (defaults to 250)')
+parser.add_argument('collect-certs', type=int, nargs='?', help='{0,1} Collect certs (defaults to 0 - no)')
 
 args = vars(parser.parse_args())
 domain = args["domain"]
@@ -231,6 +255,7 @@ follow_redir = args['follow-redir']
 timeout = args['timeout']
 url_resource = args['url-resource']
 workers = args['workers']
+collect_certs = args['collect-certs']
 
 if domain is None:
 	print('Domain not set')
@@ -266,6 +291,12 @@ if workers is None:
 else:
 	WORKERS = int(workers)
 
+if collect_certs is None:
+	COLLECT_CERTS = 0;
+	print('Using No for collect certs')
+else:
+	COLLECT_CERTS = int(collect_certs)
+
 var_networks = []
 if os.path.isfile(networks):
 	with open(networks) as my_file:
@@ -286,6 +317,13 @@ else:
 if not os.path.exists(os.path.dirname('./'+WORKDIR+'/find-vhost.log')):
     try:
         os.makedirs(os.path.dirname('./'+WORKDIR+'/find-vhost.log'))
+    except OSError as exc: 
+        if exc.errno != errno.EEXIST:
+            raise
+
+if not os.path.exists(os.path.dirname('./'+WORKDIR+'/certs/')):
+    try:
+        os.makedirs(os.path.dirname('./'+WORKDIR+'/certs/'))
     except OSError as exc: 
         if exc.errno != errno.EEXIST:
             raise
