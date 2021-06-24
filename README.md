@@ -59,5 +59,5 @@ python cloud-feio.py FILE1 FILE2
 ```
 
 ```
-python cloud-feio.py myshare.club networks.txt texts.txt 1 30 '/index.html' 250 1
+python cloud-feio.py example.com networks.txt texts.txt 1 30 '/index.html' 250 1
 ```
