@@ -1,6 +1,6 @@
 # Cloud-*Feio* (Ugly - in portuguese) 
 
-Cloud-*Feio* is a tool which aims to help in the identification of a virtual host in suspected networks. It is capable to find virtual hosts that respond HTTP requests, HTTPS requests with Server Name Identification (SNI) and HTTPS with with the Host header (without SNI). This tool might be used to **find hosts behind cloudflare** (you have to have at least an idea of which networks the host might be under).
+Cloud-*Feio* is a tool which aims to help in the identification of a virtual host final IP address. It is capable of searching virtual hosts that respond HTTP requests, HTTPS requests with Server Name Identification (SNI) and HTTPS with with the Host header (without SNI). This tool might be used to **find hosts behind cloudflare** (you have to have at least an idea of which networks the host might be under).
 
 ### Basic usage
 
@@ -11,9 +11,17 @@ Please, for better results, consider replacing the network and the expected stri
 ```
 ### Thanks
 
-There has been many contributions of these guys: [jpclaudino](https://github.com/jpclaudino), [jassis](https://github.com/Kirlianz), [kraftdenker](https://github.com/kraftdenker). The tool uses the pycurl which ultimately uses curl! Thanks curl!
+There has been many contributions of these guys: [jpclaudino](https://github.com/jpclaudino), [jassis](https://github.com/Kirlianz), [kraftdenker](https://github.com/kraftdenker). 
 
-### Program Usage
+### Pictures
+
+ - Cloud-Feio generates a scan folder. 
+ - Matches are the ones with score greater than zero. The score is incrementead whenever an expected line is captured in the response. 
+ - Consider activating the save certs option (disabled by default).
+ 
+![Log](/pictures/cloud-feio.JPG)
+
+### Usage
 <pre>
 usage: cloud-feio.py [-h]
                      domain networks expected-txt [follow-redir] [timeout]
@@ -61,3 +69,5 @@ python cloud-feio.py FILE1 FILE2
 ```
 python cloud-feio.py example.com networks.txt texts.txt 1 30 '/index.html' 250 1
 ```
+
+
